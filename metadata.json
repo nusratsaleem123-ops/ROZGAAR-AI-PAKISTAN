@@ -1,0 +1,6 @@
+{
+  "name": "RozgaarAI Pakistan",
+  "description": "AI-Powered Career, Skills & Employment Navigator for Pakistani students, graduates, job seekers, and freelancers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

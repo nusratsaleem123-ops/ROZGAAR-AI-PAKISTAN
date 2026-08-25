@@ -1,0 +1,104 @@
+import { UserProfile } from '../types';
+
+export const PAKISTAN_PRESET_PERSONAS: { id: string; label: string; tag: string; description: string; profile: Partial<UserProfile> }[] = [
+  {
+    id: 'persona-economics-data',
+    label: 'Zainab — Economics Grad ➔ Data Analyst',
+    tag: 'Economics Graduate',
+    description: 'BSc Economics graduate from Karachi. Strong analytical foundations in statistics and basic Excel, wants to break into commercial Data Analytics.',
+    profile: {
+      fullName: 'Zainab Farooq',
+      location: 'Karachi, Sindh',
+      education: 'Bachelors (Graduated)',
+      fieldOfStudy: 'Economics & Econometrics',
+      experienceLevel: 'Beginner (0-1 year)',
+      employmentStatus: 'Unemployed / Job Seeking',
+      technicalSkills: ['Microsoft Excel (Intermediate)', 'Basic Statistics', 'SPSS / Stata', 'Descriptive Analytics'],
+      softSkills: ['Analytical Problem Solving', 'Report Writing', 'Presentation Skills', 'Attention to Detail'],
+      digitalSkills: ['Google Workspace', 'Data Entry', 'Online Research'],
+      languages: ['English (Fluent)', 'Urdu (Native)'],
+      interests: ['Data', 'Economics', 'Business', 'Finance'],
+      careerPreferences: ['Full-Time Employment (Local)', 'Remote Work (International / Local)'],
+      weeklyHoursAvailable: 15,
+      budgetPreference: 'Free Only',
+      deviceLimitations: 'Mid-range Laptop with stable home Wi-Fi',
+      targetCareerInterest: 'Data Analyst / Business Intelligence Specialist',
+      preferredLanguageMode: 'Bilingual'
+    }
+  },
+  {
+    id: 'persona-cs-frontend',
+    label: 'Bilal — 3rd Year CS Student ➔ Remote Frontend Dev',
+    tag: 'CS Undergrad',
+    description: 'Undergraduate student in Lahore. Knows JavaScript fundamentals, HTML/CSS, basic C++, eager to build a standout React portfolio for remote gigs.',
+    profile: {
+      fullName: 'Bilal Ahmed',
+      location: 'Lahore, Punjab',
+      education: 'Bachelors (In Progress)',
+      fieldOfStudy: 'Computer Science (FAST/NUST/PU)',
+      experienceLevel: 'No Experience / Student',
+      employmentStatus: 'Student',
+      technicalSkills: ['C++', 'JavaScript (ES6)', 'HTML5 / CSS3', 'Git (Basic)', 'Object Oriented Programming'],
+      softSkills: ['Curiosity to Learn', 'Team Collaboration', 'Time Management'],
+      digitalSkills: ['VS Code', 'GitHub Basics', 'Discord / Slack'],
+      languages: ['Urdu (Native)', 'English (Professional)', 'Punjabi'],
+      interests: ['Technology', 'Design', 'Software Engineering'],
+      careerPreferences: ['Remote Work (International / Local)', 'Freelancing (Upwork / Fiverr / Direct)'],
+      weeklyHoursAvailable: 12,
+      budgetPreference: 'Free Only',
+      deviceLimitations: 'Standard Core i5 laptop, occasional load-shedding backup',
+      targetCareerInterest: 'Frontend Web Developer (React / Next.js / TypeScript)',
+      preferredLanguageMode: 'English'
+    }
+  },
+  {
+    id: 'persona-bcom-freelance',
+    label: 'Hamza — B.Com Grad ➔ Bookkeeping & E-Commerce',
+    tag: 'Commerce & Accounting',
+    description: 'B.Com graduate from Faisalabad. Strong grasp of manual ledger, debit/credit, wanting to master QuickBooks Online & Xero for Upwork international clients.',
+    profile: {
+      fullName: 'Muhammad Hamza',
+      location: 'Faisalabad, Punjab',
+      education: 'Bachelors (Graduated)',
+      fieldOfStudy: 'Commerce / Accounting (B.Com)',
+      experienceLevel: 'Beginner (0-1 year)',
+      employmentStatus: 'Unemployed / Job Seeking',
+      technicalSkills: ['Financial Accounting', 'Manual Ledger & Trial Balance', 'MS Excel (Formulas, VLOOKUP)', 'Pakistani Tax Basics'],
+      softSkills: ['Client Communication', 'Integrity & Confidentiality', 'Work Ethic'],
+      digitalSkills: ['MS Office', 'Email Etiquette', 'Internet Browsing'],
+      languages: ['Urdu (Native)', 'English (Intermediate)', 'Punjabi'],
+      interests: ['Finance', 'Business', 'Freelancing'],
+      careerPreferences: ['Freelancing (Upwork / Fiverr / Direct)', 'Full-Time Employment (Local)'],
+      weeklyHoursAvailable: 20,
+      budgetPreference: 'Low-Cost / Affordable',
+      deviceLimitations: 'Desktop PC (Core i3) with 4G Mobile Hotspot',
+      targetCareerInterest: 'E-commerce Specialist & Bookkeeper (QuickBooks / Xero)',
+      preferredLanguageMode: 'Urdu / Roman Urdu'
+    }
+  },
+  {
+    id: 'persona-intermediate-design',
+    label: 'Ayesha — ICS Student ➔ UI/UX & Graphic Design',
+    tag: 'Intermediate / Career Starter',
+    description: 'Intermediate ICS graduate from Peshawar with creative aptitude, basic Canva and Photoshop skills, looking to build a UI/UX portfolio for product tech companies.',
+    profile: {
+      fullName: 'Ayesha Khan',
+      location: 'Peshawar, KP',
+      education: 'Intermediate / FSc / FA / ICS',
+      fieldOfStudy: 'ICS (Computer Studies)',
+      experienceLevel: 'No Experience / Student',
+      employmentStatus: 'Student',
+      technicalSkills: ['Canva', 'Adobe Photoshop (Basic)', 'Visual Composition', 'Color Theory'],
+      softSkills: ['Creativity', 'Empathy', 'Listening Skills'],
+      digitalSkills: ['Social Media Design', 'Figma (Beginner)'],
+      languages: ['Pashto (Native)', 'Urdu (Fluent)', 'English (Good)'],
+      interests: ['Design', 'Technology', 'Digital Art'],
+      careerPreferences: ['Freelancing (Upwork / Fiverr / Direct)', 'Remote Work (International / Local)'],
+      weeklyHoursAvailable: 10,
+      budgetPreference: 'Free Only',
+      deviceLimitations: 'Laptop (8GB RAM), home fiber connection',
+      targetCareerInterest: 'UI/UX Product Designer',
+      preferredLanguageMode: 'Bilingual'
+    }
+  }
+];
