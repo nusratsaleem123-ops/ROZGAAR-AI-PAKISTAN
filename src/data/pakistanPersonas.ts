@@ -1,5 +1,28 @@
 import { UserProfile } from '../types';
 
+export const BLANK_USER_PROFILE: UserProfile = {
+  id: 'user-profile-custom',
+  fullName: '',
+  location: 'Lahore, Punjab',
+  education: 'Bachelors (Graduated)',
+  fieldOfStudy: '',
+  experienceLevel: 'No Experience / Student',
+  employmentStatus: 'Unemployed / Job Seeking',
+  technicalSkills: [],
+  softSkills: [],
+  digitalSkills: [],
+  languages: ['English (Fluent)', 'Urdu (Native)'],
+  interests: [],
+  careerPreferences: ['Remote Work (International / Local)', 'Full-Time Employment (Local)'],
+  weeklyHoursAvailable: 15,
+  budgetPreference: 'Free Only',
+  deviceLimitations: 'Laptop / PC with regular home Internet',
+  targetCareerInterest: '',
+  preferredLanguageMode: 'Bilingual',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
 export const PAKISTAN_PRESET_PERSONAS: { id: string; label: string; tag: string; description: string; profile: Partial<UserProfile> }[] = [
   {
     id: 'persona-economics-data',

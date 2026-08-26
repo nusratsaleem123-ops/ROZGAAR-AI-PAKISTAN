@@ -20,7 +20,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { UserProfile, EducationLevel, ExperienceLevel, EmploymentStatus, CareerPreference } from '../types';
-import { PAKISTAN_PRESET_PERSONAS } from '../data/pakistanPersonas';
+import { PAKISTAN_PRESET_PERSONAS, BLANK_USER_PROFILE } from '../data/pakistanPersonas';
 
 interface ProfileViewProps {
   profile: UserProfile;
@@ -153,7 +153,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     onRunAssessment();
   };
 
+  const handleClearToBlank = () => {
+    if (onClearAssessmentError) onClearAssessmentError();
+    const blank: UserProfile = {
+      ...BLANK_USER_PROFILE,
+      id: `profile-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    onUpdateProfile(blank);
+    onSaveProfile(blank);
+    setValidationErrors([]);
+    setSaveNotification('Profile cleared to blank. You can now fill in your own authentic details.');
+    setTimeout(() => setSaveNotification(null), 4000);
+  };
+
   const handleApplyPreset = (presetId: string) => {
+    if (presetId === 'blank') {
+      handleClearToBlank();
+      return;
+    }
     const preset = PAKISTAN_PRESET_PERSONAS.find((p) => p.id === presetId);
     if (preset && preset.profile) {
       const updated: UserProfile = {
@@ -225,7 +244,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               Transforming individual background, constraints, and education into explainable AI-guided pathways.
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleClearToBlank}
+              id="top-clear-profile-button"
+              type="button"
+              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              title="Clear all fields to start with a blank form"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+              <span>Blank / Clear Form</span>
+            </button>
             <button
               onClick={handleSave}
               id="top-save-profile-button"
@@ -248,13 +277,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </div>
 
-        {/* Persona quick buttons */}
+        {/* Persona & Blank Form quick buttons */}
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-slate-300">Quick-Load Authentic Pakistani Personas:</span>
-            <span className="text-[11px] text-slate-500">1-click populated profiles</span>
+            <span className="text-xs font-medium text-slate-300">Choose Profile Template or Start Fresh:</span>
+            <span className="text-[11px] text-slate-500">1-click populated or blank</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            {/* Blank Form Card */}
+            <button
+              onClick={handleClearToBlank}
+              id="preset-btn-blank"
+              type="button"
+              className="text-left p-3 rounded-lg bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-600/70 hover:border-emerald-500 transition group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 border border-emerald-600">
+                  Blank Form
+                </span>
+                <span className="text-[10px] text-emerald-400 group-hover:text-emerald-300 font-bold transition">Start Fresh ➔</span>
+              </div>
+              <p className="text-xs font-bold text-white mt-1.5">Fill Your Own Details</p>
+              <p className="text-[11px] text-slate-300 mt-1 line-clamp-2">Empty form ready for your custom Pakistani degree, skills & target career.</p>
+            </button>
+
             {PAKISTAN_PRESET_PERSONAS.map((preset) => (
               <button
                 key={preset.id}
@@ -264,10 +310,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 className="text-left p-3 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/50 transition group"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-900 text-emerald-300 border border-emerald-800/60">
                     {preset.tag}
                   </span>
-                  <span className="text-[10px] text-slate-400 group-hover:text-emerald-400 transition">Load ➔</span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-emerald-400 transition">Sample ➔</span>
                 </div>
                 <p className="text-xs font-semibold text-slate-200 mt-1.5">{preset.label}</p>
                 <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{preset.description}</p>
@@ -494,7 +540,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto mb-2">
               {profile.technicalSkills.map((skill) => (
                 <span
                   key={skill}
@@ -510,6 +556,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </button>
                 </span>
               ))}
+            </div>
+            {/* Quick add common skills */}
+            <div className="pt-1 border-t border-slate-800/80">
+              <span className="text-[10px] text-slate-500 block mb-1">Quick-Add Popular Pakistani Skills:</span>
+              <div className="flex flex-wrap gap-1">
+                {['MS Excel', 'Python', 'SQL', 'Power BI', 'React.js', 'JavaScript', 'QuickBooks', 'Figma', 'Canva', 'WordPress', 'C++', 'Financial Accounting'].filter(s => !profile.technicalSkills.includes(s)).slice(0, 8).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => handleAddSkill('technical', s)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-emerald-300 border border-slate-700/60 transition"
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -539,7 +601,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+            <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto mb-2">
               {profile.softSkills.map((skill) => (
                 <span
                   key={skill}
@@ -555,6 +617,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </button>
                 </span>
               ))}
+            </div>
+            {/* Quick add soft skills */}
+            <div className="pt-1 border-t border-slate-800/80">
+              <span className="text-[10px] text-slate-500 block mb-1">Quick-Add Soft Skills:</span>
+              <div className="flex flex-wrap gap-1">
+                {['Analytical Reasoning', 'Report Writing', 'Client Communication', 'Problem Solving', 'Team Collaboration', 'Time Management'].filter(s => !profile.softSkills.includes(s)).slice(0, 5).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => handleAddSkill('soft', s)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-emerald-300 border border-slate-700/60 transition"
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -584,7 +662,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mb-2">
               {profile.interests.map((interest) => (
                 <span
                   key={interest}
@@ -600,6 +678,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </button>
                 </span>
               ))}
+            </div>
+            {/* Quick add interests */}
+            <div className="pt-1 border-t border-slate-800/80">
+              <span className="text-[10px] text-slate-500 block mb-1">Quick-Add Interests:</span>
+              <div className="flex flex-wrap gap-1">
+                {['Data Analytics', 'Web Development', 'E-Commerce', 'UI/UX Design', 'Finance & FinTech', 'Freelancing'].filter(s => !profile.interests.includes(s)).slice(0, 5).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => handleAddSkill('interest', s)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-emerald-300 border border-slate-700/60 transition"
+                  >
+                    + {s}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -691,7 +785,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             Profile is mapped against <strong>P@SHA</strong>, <strong>NAVTTC NVQF</strong>, and <strong>DigiSkills.pk</strong> frameworks without storing personally sensitive credentials.
           </span>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleClearToBlank}
+            id="bottom-clear-profile-button"
+            className="w-full sm:w-auto px-4 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold text-sm transition flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4 text-amber-400" />
+            <span>Blank Form</span>
+          </button>
           <button
             type="button"
             onClick={handleSave}
