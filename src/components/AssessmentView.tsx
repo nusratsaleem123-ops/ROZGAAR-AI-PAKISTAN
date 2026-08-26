@@ -24,8 +24,11 @@ interface AssessmentViewProps {
   onGoToSkillGap: (career: CareerRecommendation) => void;
   onGoToRoadmap: (career: CareerRecommendation) => void;
   onGoToPortfolio: (career: CareerRecommendation) => void;
+  onGoBackToProfile?: () => void;
+  onRunAssessment?: () => void;
   profile: UserProfile;
   isLoading: boolean;
+  error?: string | null;
 }
 
 export const AssessmentView: React.FC<AssessmentViewProps> = ({
@@ -35,8 +38,11 @@ export const AssessmentView: React.FC<AssessmentViewProps> = ({
   onGoToSkillGap,
   onGoToRoadmap,
   onGoToPortfolio,
+  onGoBackToProfile,
+  onRunAssessment,
   profile,
   isLoading,
+  error,
 }) => {
   if (isLoading) {
     return (
@@ -50,14 +56,66 @@ export const AssessmentView: React.FC<AssessmentViewProps> = ({
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-4" id="assessment-error-container">
+        <div className="w-12 h-12 rounded-full bg-amber-950/80 border border-amber-800 flex items-center justify-center text-amber-400 mx-auto">
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-bold text-white">Assessment Error</h3>
+        <p className="text-xs text-amber-200/90 max-w-md mx-auto">
+          {error}
+        </p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          {onGoBackToProfile && (
+            <button
+              onClick={onGoBackToProfile}
+              className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            >
+              Edit Profile
+            </button>
+          )}
+          {onRunAssessment && (
+            <button
+              onClick={onRunAssessment}
+              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Retry Assessment</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!recommendations || recommendations.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-3" id="assessment-empty">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-4" id="assessment-empty">
         <Sparkles className="w-8 h-8 text-slate-500 mx-auto" />
         <h3 className="text-sm font-semibold text-slate-300">No Assessment Results Yet</h3>
         <p className="text-xs text-slate-400 max-w-sm mx-auto">
           Please fill out or load a Pakistani persona in Step 1 and click &quot;Run AI Career Assessment&quot;.
         </p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          {onGoBackToProfile && (
+            <button
+              onClick={onGoBackToProfile}
+              className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            >
+              Go to Profile
+            </button>
+          )}
+          {onRunAssessment && (
+            <button
+              onClick={onRunAssessment}
+              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Run Assessment</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   }

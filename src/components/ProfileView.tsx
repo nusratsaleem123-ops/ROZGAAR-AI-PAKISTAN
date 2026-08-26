@@ -14,7 +14,10 @@ import {
   Layers, 
   Languages, 
   HeartHandshake,
-  AlertCircle
+  AlertCircle,
+  Save,
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
 import { UserProfile, EducationLevel, ExperienceLevel, EmploymentStatus, CareerPreference } from '../types';
 import { PAKISTAN_PRESET_PERSONAS } from '../data/pakistanPersonas';
@@ -22,19 +25,27 @@ import { PAKISTAN_PRESET_PERSONAS } from '../data/pakistanPersonas';
 interface ProfileViewProps {
   profile: UserProfile;
   onUpdateProfile: (updated: UserProfile) => void;
+  onSaveProfile: (profileToSave: UserProfile) => boolean;
   onRunAssessment: () => void;
   isLoading: boolean;
+  assessmentError?: string | null;
+  onClearAssessmentError?: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   profile,
   onUpdateProfile,
+  onSaveProfile,
   onRunAssessment,
   isLoading,
+  assessmentError,
+  onClearAssessmentError,
 }) => {
   const [techInput, setTechInput] = useState('');
   const [softInput, setSoftInput] = useState('');
   const [interestInput, setInterestInput] = useState('');
+  const [saveNotification, setSaveNotification] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const pakistanLocations = [
     'Karachi, Sindh',
@@ -87,14 +98,74 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     'Higher Education / Research'
   ];
 
+  const validate = (data: UserProfile): string[] => {
+    const errors: string[] = [];
+    if (!data.fullName || !data.fullName.trim()) {
+      errors.push('Full Name is required.');
+    }
+    if (!data.location || !data.location.trim()) {
+      errors.push('Location in Pakistan is required.');
+    }
+    if (!data.education) {
+      errors.push('Education level is required.');
+    }
+    if (!data.fieldOfStudy || !data.fieldOfStudy.trim()) {
+      errors.push('Field of Study / Major is required.');
+    }
+    if (!data.technicalSkills || data.technicalSkills.length === 0) {
+      errors.push('Please add at least one technical skill or software tool.');
+    }
+    return errors;
+  };
+
+  const handleSave = () => {
+    if (onClearAssessmentError) onClearAssessmentError();
+    const errors = validate(profile);
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setSaveNotification(null);
+      return false;
+    }
+
+    setValidationErrors([]);
+    const success = onSaveProfile(profile);
+    if (success) {
+      setSaveNotification('Profile saved successfully. Your details are now persisted and ready for AI assessment.');
+      setTimeout(() => {
+        setSaveNotification(null);
+      }, 5000);
+      return true;
+    }
+    return false;
+  };
+
+  const handleRunAssessmentClick = () => {
+    if (onClearAssessmentError) onClearAssessmentError();
+    const errors = validate(profile);
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setSaveNotification(null);
+      return;
+    }
+
+    setValidationErrors([]);
+    onSaveProfile(profile);
+    onRunAssessment();
+  };
+
   const handleApplyPreset = (presetId: string) => {
     const preset = PAKISTAN_PRESET_PERSONAS.find((p) => p.id === presetId);
     if (preset && preset.profile) {
-      onUpdateProfile({
+      const updated: UserProfile = {
         ...profile,
         ...preset.profile,
         updatedAt: new Date().toISOString()
-      });
+      };
+      onUpdateProfile(updated);
+      onSaveProfile(updated);
+      setValidationErrors([]);
+      setSaveNotification(`Loaded persona "${preset.label}" and saved to profile.`);
+      setTimeout(() => setSaveNotification(null), 4000);
     }
   };
 
@@ -103,17 +174,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     const trimmed = value.trim();
     if (type === 'technical') {
       if (!profile.technicalSkills.includes(trimmed)) {
-        onUpdateProfile({ ...profile, technicalSkills: [...profile.technicalSkills, trimmed] });
+        const updated = { ...profile, technicalSkills: [...profile.technicalSkills, trimmed] };
+        onUpdateProfile(updated);
       }
       setTechInput('');
     } else if (type === 'soft') {
       if (!profile.softSkills.includes(trimmed)) {
-        onUpdateProfile({ ...profile, softSkills: [...profile.softSkills, trimmed] });
+        const updated = { ...profile, softSkills: [...profile.softSkills, trimmed] };
+        onUpdateProfile(updated);
       }
       setSoftInput('');
     } else if (type === 'interest') {
       if (!profile.interests.includes(trimmed)) {
-        onUpdateProfile({ ...profile, interests: [...profile.interests, trimmed] });
+        const updated = { ...profile, interests: [...profile.interests, trimmed] };
+        onUpdateProfile(updated);
       }
       setInterestInput('');
     }
@@ -151,32 +225,141 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               Transforming individual background, constraints, and education into explainable AI-guided pathways.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">Load Pakistani Persona:</span>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleSave}
+              id="top-save-profile-button"
+              type="button"
+              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition"
+            >
+              <Save className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Save Profile</span>
+            </button>
+            <button
+              onClick={handleRunAssessmentClick}
+              disabled={isLoading}
+              id="top-run-assessment-button"
+              type="button"
+              className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-50 shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isLoading ? 'Assessing...' : 'Run Assessment'}</span>
+            </button>
           </div>
         </div>
 
         {/* Persona quick buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-4">
-          {PAKISTAN_PRESET_PERSONAS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => handleApplyPreset(preset.id)}
-              id={`preset-btn-${preset.id}`}
-              className="text-left p-3 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/50 transition group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
-                  {preset.tag}
-                </span>
-                <span className="text-[10px] text-slate-400 group-hover:text-emerald-400 transition">Load ➔</span>
-              </div>
-              <p className="text-xs font-semibold text-slate-200 mt-1.5">{preset.label}</p>
-              <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{preset.description}</p>
-            </button>
-          ))}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-slate-300">Quick-Load Authentic Pakistani Personas:</span>
+            <span className="text-[11px] text-slate-500">1-click populated profiles</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {PAKISTAN_PRESET_PERSONAS.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => handleApplyPreset(preset.id)}
+                id={`preset-btn-${preset.id}`}
+                type="button"
+                className="text-left p-3 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/50 transition group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                    {preset.tag}
+                  </span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-emerald-400 transition">Load ➔</span>
+                </div>
+                <p className="text-xs font-semibold text-slate-200 mt-1.5">{preset.label}</p>
+                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{preset.description}</p>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Save Success Banner */}
+      {saveNotification && (
+        <div 
+          id="profile-save-success-banner" 
+          className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-600/80 text-emerald-200 flex items-start justify-between gap-3 animate-in fade-in duration-200"
+        >
+          <div className="flex items-start gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold text-emerald-300">Profile Saved Successfully</h4>
+              <p className="text-xs text-emerald-200/90 mt-0.5">{saveNotification}</p>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setSaveNotification(null)}
+            className="text-emerald-400 hover:text-emerald-200 p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Validation Errors Banner */}
+      {validationErrors.length > 0 && (
+        <div 
+          id="profile-validation-error-banner"
+          className="p-4 rounded-xl bg-rose-950/70 border border-rose-600/80 text-rose-200 flex items-start justify-between gap-3 animate-in fade-in duration-200"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold text-rose-300">Please Complete Required Fields Before Saving:</h4>
+              <ul className="text-xs text-rose-200/90 mt-1 list-disc list-inside space-y-0.5">
+                {validationErrors.map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setValidationErrors([])}
+            className="text-rose-400 hover:text-rose-200 p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Assessment Error Banner */}
+      {assessmentError && (
+        <div 
+          id="profile-assessment-error-banner"
+          className="p-4 rounded-xl bg-amber-950/70 border border-amber-600/80 text-amber-200 flex items-start justify-between gap-3 animate-in fade-in duration-200"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold text-amber-300">Assessment Error</h4>
+              <p className="text-xs text-amber-200/90 mt-0.5">{assessmentError}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleRunAssessmentClick}
+              className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-semibold transition"
+            >
+              Retry
+            </button>
+            {onClearAssessmentError && (
+              <button 
+                type="button" 
+                onClick={onClearAssessmentError}
+                className="text-amber-400 hover:text-amber-200 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Profile Form */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -188,7 +371,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Full Name <span className="text-emerald-400">*</span>
+            </label>
             <input
               type="text"
               value={profile.fullName}
@@ -200,7 +385,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Location in Pakistan</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Location in Pakistan <span className="text-emerald-400">*</span>
+            </label>
             <select
               value={profile.location}
               onChange={(e) => onUpdateProfile({ ...profile, location: e.target.value })}
@@ -214,7 +401,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Education Level</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Education Level <span className="text-emerald-400">*</span>
+            </label>
             <select
               value={profile.education}
               onChange={(e) => onUpdateProfile({ ...profile, education: e.target.value as EducationLevel })}
@@ -228,13 +417,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Field of Study / Major</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Field of Study / Major <span className="text-emerald-400">*</span>
+            </label>
             <input
               type="text"
               value={profile.fieldOfStudy}
               onChange={(e) => onUpdateProfile({ ...profile, fieldOfStudy: e.target.value })}
               className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              placeholder="e.g. Economics, CS, BBA, Commerce"
+              placeholder="e.g. Economics, Computer Science, BBA, Commerce"
               id="profile-field-input"
             />
           </div>
@@ -277,7 +468,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
           {/* Technical Skills */}
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Technical Skills & Software</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Technical Skills & Software <span className="text-emerald-400">*</span>
+            </label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
@@ -491,32 +684,45 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </div>
 
       {/* Action Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-900 border border-slate-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-xl bg-slate-900 border border-slate-800">
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <AlertCircle className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>
             Profile is mapped against <strong>P@SHA</strong>, <strong>NAVTTC NVQF</strong>, and <strong>DigiSkills.pk</strong> frameworks without storing personally sensitive credentials.
           </span>
         </div>
-        <button
-          onClick={onRunAssessment}
-          disabled={isLoading}
-          id="run-assessment-button"
-          className="w-full sm:w-auto px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md shadow-emerald-950/50 transition flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          {isLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Analyzing Profile & Market Data...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              <span>Run AI Career Assessment</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleSave}
+            id="save-profile-button"
+            className="w-full sm:w-auto px-5 py-3 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Save className="w-4 h-4 text-emerald-400" />
+            <span>Save Profile</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleRunAssessmentClick}
+            disabled={isLoading}
+            id="run-assessment-button"
+            className="w-full sm:w-auto px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-md shadow-emerald-950/50 transition flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Analyzing Profile & Market Data...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Run AI Career Assessment</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
 };
+

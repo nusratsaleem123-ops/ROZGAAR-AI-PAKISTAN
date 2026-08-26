@@ -31,7 +31,7 @@ const getGeminiClient = () => {
 
 // Resilient multi-model content generator with graceful fallback
 async function safeGenerateContent(ai: GoogleGenAI, config: any) {
-  const candidateModels = ['gemini-2.5-flash', 'gemini-3.7-flash', 'gemini-3.1-flash-lite'];
+  const candidateModels = ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
   let lastError: any = null;
 
   for (const model of candidateModels) {
@@ -44,8 +44,17 @@ async function safeGenerateContent(ai: GoogleGenAI, config: any) {
     } catch (err: any) {
       lastError = err;
       const errMsg = err?.message || '';
-      const isQuotaOrRateLimit = errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('503') || err?.status === 'RESOURCE_EXHAUSTED' || err?.status === 'UNAVAILABLE';
-      if (!isQuotaOrRateLimit) {
+      const isRetryable = 
+        errMsg.includes('429') || 
+        errMsg.includes('RESOURCE_EXHAUSTED') || 
+        errMsg.includes('503') || 
+        errMsg.includes('404') || 
+        errMsg.includes('NOT_FOUND') ||
+        err?.status === 'RESOURCE_EXHAUSTED' || 
+        err?.status === 'UNAVAILABLE' ||
+        err?.status === 'NOT_FOUND';
+        
+      if (!isRetryable) {
         throw err;
       }
     }

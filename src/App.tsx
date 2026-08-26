@@ -26,8 +26,16 @@ import {
 import { PAKISTAN_PRESET_PERSONAS } from './data/pakistanPersonas';
 
 export default function App() {
-  // 1. Core Profile State (defaults to Zainab Farooq - Economics Persona)
+  // 1. Core Profile State (persisted with fallback to Zainab Farooq)
   const [profile, setProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_profile');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Could not read profile from localStorage', e);
+    }
     const defaultPersona = PAKISTAN_PRESET_PERSONAS[0].profile;
     return {
       fullName: defaultPersona.fullName || 'Zainab Farooq',
@@ -51,14 +59,62 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('profile');
   const [isEscalationOpen, setIsEscalationOpen] = useState<boolean>(false);
   const [isKnowledgeDrawerOpen, setIsKnowledgeDrawerOpen] = useState<boolean>(false);
+  const [assessmentError, setAssessmentError] = useState<string | null>(null);
 
-  // 3. AI Outputs State
-  const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
-  const [selectedCareer, setSelectedCareer] = useState<CareerRecommendation | null>(null);
-  const [skillGapResult, setSkillGapResult] = useState<SkillGapAnalysisResult | null>(null);
-  const [roadmap, setRoadmap] = useState<LearningRoadmap | null>(null);
-  const [completedWeeks, setCompletedWeeks] = useState<number[]>([1]);
-  const [portfolioProject, setPortfolioProject] = useState<PortfolioProject | null>(null);
+  // 3. AI Outputs State (persisted)
+  const [recommendations, setRecommendations] = useState<CareerRecommendation[]>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_recommendations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [selectedCareer, setSelectedCareer] = useState<CareerRecommendation | null>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_selected_career');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [skillGapResult, setSkillGapResult] = useState<SkillGapAnalysisResult | null>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_skill_gap');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [roadmap, setRoadmap] = useState<LearningRoadmap | null>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_roadmap');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [completedWeeks, setCompletedWeeks] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_completed_weeks');
+      return saved ? JSON.parse(saved) : [1];
+    } catch {
+      return [1];
+    }
+  });
+
+  const [portfolioProject, setPortfolioProject] = useState<PortfolioProject | null>(() => {
+    try {
+      const saved = localStorage.getItem('rozgaar_portfolio_project');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // 4. Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -77,6 +133,18 @@ export default function App() {
   const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState<boolean>(false);
   const [isGeneratingPortfolio, setIsGeneratingPortfolio] = useState<boolean>(false);
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
+
+  // Save profile explicitly to local storage and state
+  const handleSaveProfile = (profileToSave: UserProfile): boolean => {
+    try {
+      setProfile(profileToSave);
+      localStorage.setItem('rozgaar_profile', JSON.stringify(profileToSave));
+      return true;
+    } catch (e) {
+      console.error('Failed to save profile:', e);
+      return false;
+    }
+  };
 
   // Calculate Dynamic Readiness Score
   const calculateReadinessScores = () => {
@@ -105,22 +173,37 @@ export default function App() {
   // Run AI Assessment
   const handleRunAssessment = async () => {
     setIsAssessing(true);
+    setAssessmentError(null);
     setCurrentStep('assessment');
     try {
+      // Ensure latest profile in localStorage
+      localStorage.setItem('rozgaar_profile', JSON.stringify(profile));
+
       const res = await fetch('/api/assess-career', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile }),
       });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+      }
+
       const data = await res.json();
-      if (data.recommendations && data.recommendations.length > 0) {
+      if (data.recommendations && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
         setRecommendations(data.recommendations);
         setSelectedCareer(data.recommendations[0]);
+        localStorage.setItem('rozgaar_recommendations', JSON.stringify(data.recommendations));
+        localStorage.setItem('rozgaar_selected_career', JSON.stringify(data.recommendations[0]));
+        
         // Trigger initial background gap analysis for the primary career
         triggerGapAnalysis(data.recommendations[0]);
+      } else {
+        throw new Error(data.error || 'No recommendations returned from the assessment engine.');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Assessment failed:', e);
+      setAssessmentError(e?.message || 'Failed to generate assessment recommendations. Please try again.');
     } finally {
       setIsAssessing(false);
     }
@@ -136,10 +219,10 @@ export default function App() {
         body: JSON.stringify({ profile, careerTitle: career.title, career }),
       });
       const data = await res.json();
-      if (data.skillGapResult) {
-        setSkillGapResult(data.skillGapResult);
-      } else if (data.skills) {
-        setSkillGapResult(data);
+      const result = data.skillGapResult || (data.skills ? data : null);
+      if (result) {
+        setSkillGapResult(result);
+        localStorage.setItem('rozgaar_skill_gap', JSON.stringify(result));
       }
     } catch (e) {
       console.error('Skill gap analysis failed:', e);
@@ -159,10 +242,10 @@ export default function App() {
         body: JSON.stringify({ profile, careerTitle: career.title, career, durationWeeks: 8 }),
       });
       const data = await res.json();
-      if (data.roadmap) {
-        setRoadmap(data.roadmap);
-      } else if (data.weeks) {
-        setRoadmap(data);
+      const result = data.roadmap || (data.weeks ? data : null);
+      if (result) {
+        setRoadmap(result);
+        localStorage.setItem('rozgaar_roadmap', JSON.stringify(result));
       }
     } catch (e) {
       console.error('Roadmap generation failed:', e);
@@ -182,10 +265,10 @@ export default function App() {
         body: JSON.stringify({ profile, careerTitle: career.title, career }),
       });
       const data = await res.json();
-      if (data.portfolioProject) {
-        setPortfolioProject(data.portfolioProject);
-      } else if (data.problemStatement) {
-        setPortfolioProject(data);
+      const result = data.portfolioProject || (data.problemStatement ? data : null);
+      if (result) {
+        setPortfolioProject(result);
+        localStorage.setItem('rozgaar_portfolio_project', JSON.stringify(result));
       }
     } catch (e) {
       console.error('Portfolio generation failed:', e);
@@ -196,10 +279,14 @@ export default function App() {
 
   // Toggle Week Completion
   const handleToggleWeek = (weekNumber: number) => {
-    if (completedWeeks.includes(weekNumber)) {
-      setCompletedWeeks(completedWeeks.filter((w) => w !== weekNumber));
-    } else {
-      setCompletedWeeks([...completedWeeks, weekNumber]);
+    const updated = completedWeeks.includes(weekNumber)
+      ? completedWeeks.filter((w) => w !== weekNumber)
+      : [...completedWeeks, weekNumber];
+    setCompletedWeeks(updated);
+    try {
+      localStorage.setItem('rozgaar_completed_weeks', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving completed weeks', e);
     }
   };
 
@@ -244,11 +331,6 @@ export default function App() {
     }
   };
 
-  // Initial Assessment on mount if empty
-  useEffect(() => {
-    handleRunAssessment();
-  }, []);
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-emerald-500 selection:text-white" id="rozgaar-ai-app">
       {/* Top Navbar & Ribbon */}
@@ -268,8 +350,11 @@ export default function App() {
           <ProfileView
             profile={profile}
             onUpdateProfile={setProfile}
+            onSaveProfile={handleSaveProfile}
             onRunAssessment={handleRunAssessment}
             isLoading={isAssessing}
+            assessmentError={assessmentError}
+            onClearAssessmentError={() => setAssessmentError(null)}
           />
         )}
 
@@ -279,23 +364,38 @@ export default function App() {
             selectedCareer={selectedCareer}
             onSelectCareer={(career) => {
               setSelectedCareer(career);
+              try {
+                localStorage.setItem('rozgaar_selected_career', JSON.stringify(career));
+              } catch {}
               triggerGapAnalysis(career);
             }}
             onGoToSkillGap={(career) => {
               setSelectedCareer(career);
+              try {
+                localStorage.setItem('rozgaar_selected_career', JSON.stringify(career));
+              } catch {}
               triggerGapAnalysis(career);
               setCurrentStep('skill-gap');
             }}
             onGoToRoadmap={(career) => {
               setSelectedCareer(career);
+              try {
+                localStorage.setItem('rozgaar_selected_career', JSON.stringify(career));
+              } catch {}
               triggerRoadmap(career);
             }}
             onGoToPortfolio={(career) => {
               setSelectedCareer(career);
+              try {
+                localStorage.setItem('rozgaar_selected_career', JSON.stringify(career));
+              } catch {}
               triggerPortfolio(career);
             }}
+            onGoBackToProfile={() => setCurrentStep('profile')}
+            onRunAssessment={handleRunAssessment}
             profile={profile}
             isLoading={isAssessing}
+            error={assessmentError}
           />
         )}
 
