@@ -31,7 +31,7 @@ const getGeminiClient = () => {
 
 // Resilient multi-model content generator with graceful fallback
 async function safeGenerateContent(ai: GoogleGenAI, config: any) {
-  const candidateModels = ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
+  const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   let lastError: any = null;
 
   for (const model of candidateModels) {

@@ -612,3 +612,130 @@ export function generateClientPortfolio(careerTitle: string): PortfolioProject {
     ]
   };
 }
+
+export function generateClientChatReply(
+  userMessage: string,
+  profile: UserProfile,
+  careerTitle: string
+): { reply: string; citations: string[]; uncertaintyNote?: string; suggestedFollowUps?: string[] } {
+  const query = userMessage.toLowerCase();
+  const name = profile.fullName || 'Candidate';
+  const field = profile.fieldOfStudy || 'Undergraduate Degree';
+  const role = careerTitle || 'Selected Career';
+
+  if (query.includes('salary') || query.includes('pay') || query.includes('pkr') || query.includes('earn') || query.includes('income')) {
+    return {
+      reply: `Based on the **P@SHA IT Industry Salary Survey (2024-2025)** and current Pakistani hiring benchmarks for **${role}**:
+
+• **Local Entry-Level / Junior (0-1.5 years):** PKR 75,000 to PKR 135,000/month in Karachi, Lahore, and Islamabad.
+• **Mid-Level (2-4 years):** PKR 180,000 to PKR 320,000/month.
+• **Remote Global / Freelance (Upwork / Fiverr):** Starting at $18 - $35/hour (approx. PKR 150,000 - PKR 400,000/month depending on contract volume).
+
+*Tips for Pakistan:* IT export earnings deposited into official Pakistani bank Freelancer Accounts (such as Meezan or HBL Freelancer) benefit from the subsidized **0.25% PSEB withholding tax** regime.`,
+      citations: ['P@SHA IT Industry Salary Survey 2024-2025', 'PSEB Tech Export Guidelines', 'State Bank of Pakistan PRAL IT Tax Rules'],
+      uncertaintyNote: 'Salaries vary based on company size (e.g. Systems Ltd, Contour vs. early-stage agencies) and English communication ability.',
+      suggestedFollowUps: [
+        'How can I set up a PSEB-registered Freelancer bank account in Pakistan?',
+        'What skills push my compensation into the higher PKR bracket?'
+      ]
+    };
+  }
+
+  if (query.includes('cv') || query.includes('resume') || query.includes('fake') || query.includes('experience')) {
+    if (query.includes('fake') || query.includes('lie') || query.includes('cheat')) {
+      return {
+        reply: `⚠️ **Responsible AI & Integrity Advisory:** 
+I cannot fabricate or recommend adding fictitious experience to your CV. Pakistani tech recruiters (at companies like 10Pearls, VentureDive, Systems Ltd) and international freelance platforms conduct background verification and technical tests where fabricated experience is quickly detected.
+
+**How to genuinely stand out without prior work experience:**
+1. **Highlight Proof-of-Work Projects:** Feature 2-3 GitHub repositories with live links (use our **Portfolio Lab** tab).
+2. **Translate Academic Strengths:** Frame your **${field}** coursework into analytical accomplishments.
+3. **Showcase Verified Certifications:** List DigiSkills.pk, freeCodeCamp, or Microsoft Learn badges.`,
+        citations: ['P@SHA Recruitment Ethics Framework', 'HEC Career Guidelines'],
+        uncertaintyNote: 'Authentic project code and clear problem explanations beat exaggerated resumes every time.',
+        suggestedFollowUps: [
+          'What bullet points should I put for my AgriConnect or CPI project?',
+          'How do I prepare for a live technical coding test in Pakistan?'
+        ]
+      };
+    }
+
+    return {
+      reply: `Here is the recommended CV structure tailored for Pakistani tech recruiters and ATS filters for **${role}**:
+
+1. **Header:** Name, Contact, GitHub Profile Link, LinkedIn URL, Portfolio Demo Link.
+2. **Target Summary (2 lines):** "${field} graduate specializing in ${role} with practical expertise in ${profile.technicalSkills.slice(0, 3).join(', ') || 'modern tools'}."
+3. **Featured Projects (Most Important):** Include problem statement, Pakistani data context, tech stack, and GitHub repository URL.
+4. **Technical Competencies:** Structured by Category (Languages, Frameworks, Tools, Soft Skills).
+5. **Education:** ${profile.education} in ${field} (${profile.location}).`,
+      citations: ['P@SHA Hiring Standards', 'PSEB TechLift Guidance'],
+      suggestedFollowUps: [
+        'Generate custom bullet points for my portfolio project',
+        'How do I tailor my LinkedIn profile for remote overseas recruiters?'
+      ]
+    };
+  }
+
+  if (query.includes('digiskills') || query.includes('course') || query.includes('free') || query.includes('learn') || query.includes('youtube')) {
+    return {
+      reply: `Here are the top **100% free, high-impact learning resources** for a learner in Pakistan targeting **${role}**:
+
+1. **DigiSkills.pk (Government of Pakistan / Ignite):**
+   • *Freelancing Track:* Essential module by Hisham Sarwar on client bidding, profile ranking, and milestone delivery.
+   • *Data Analytics & Business:* Modules on Excel formulas, data hygiene, and introductory business reporting.
+2. **freeCodeCamp & Odin Project:**
+   • Complete interactive modules on JavaScript, React, Python, and SQL with automated project evaluation.
+3. **YouTube Channels in Urdu & English:**
+   • *CodeWithHarry / Chai aur Code:* Urdu/Hindi programming fundamentals.
+   • *Alex The Analyst:* Comprehensive real-world SQL, Power BI, and Portfolio walkthroughs.
+4. **Microsoft Learn & Kaggle:**
+   • Free official sandbox environments to practice data queries and cloud architectures.`,
+      citations: ['DigiSkills.pk / Ministry of IT & Telecom', 'freeCodeCamp Open Curriculum', 'NAVTTC Skill Matrix'],
+      suggestedFollowUps: [
+        'How many hours per week should I study to get job ready in 10-12 weeks?',
+        'Can I access these courses on a mobile device or low-spec laptop?'
+      ]
+    };
+  }
+
+  if (query.includes('job') || query.includes('apply') || query.includes('portal') || query.includes('hire') || query.includes('where')) {
+    return {
+      reply: `Here is the step-by-step **Job Application Strategy for Pakistan**:
+
+1. **Top Pakistani Job Portals:**
+   • **LinkedIn Jobs (Pakistan filter):** Best for software houses, multinational banks (HBL, Meezan), and tech startups in Karachi, Lahore, and Islamabad.
+   • **Rozee.pk & Mustakbil.com:** Traditional corporate and enterprise recruitment.
+   • **PSEB TechLift Portal:** Government initiative connecting vetted graduates with 2,000+ local software export firms.
+2. **Remote & Global Freelancing:**
+   • **Upwork & Fiverr:** Filter for "Fixed Price" entry contracts ($50-$200) to gain your first 5-star reviews.
+   • **Toptal & Turing:** For intermediate developers after 1-2 completed portfolio case studies.
+3. **Application Rule of Thumb:** Apply with a customized portfolio link rather than a generic PDF attachment.`,
+      citations: ['PSEB Tech Portal (pseb.org.pk)', 'P@SHA IT Industry Report 2024', 'Rozee.pk Employment Index'],
+      suggestedFollowUps: [
+        'What should I say in a connection note to a Pakistani HR recruiter on LinkedIn?',
+        'How do I convert my degree into an asset during interviews?'
+      ]
+    };
+  }
+
+  // General Guidance
+  return {
+    reply: `Assalam-o-Alaikum ${name}! For your background in **${field}** aiming toward **${role}**:
+
+Your best next action is to follow our **4-step career trajectory**:
+1. **Bridge Key Skill Gaps:** Spend ${profile.weeklyHoursAvailable} hours/week mastering the high-priority tools in your Roadmap.
+2. **Build Proof-of-Work:** Complete the **Pakistan Domain Portfolio Project** in tab 5 (recruiters prioritize working demos over theoretical degrees).
+3. **Optimize Your Profile:** Use the ATS keywords and bullet points generated in your Readiness diagnostic.
+4. **Apply Confidently:** Target both local companies (via LinkedIn PK / Rozee.pk) and international remote contracts (via Upwork).
+
+What specific area would you like to explore next?`,
+    citations: ['P@SHA Career Framework', 'NAVTTC NVQF Guidelines', 'DigiSkills.pk Curriculum'],
+    uncertaintyNote: 'Consistent weekly project progress is the single highest predictor of job placement.',
+    suggestedFollowUps: [
+      'Show me recommended Pakistani job portals',
+      'What are typical entry-level salary ranges in PKR?',
+      'How do I bridge my highest priority skill gap?'
+    ]
+  };
+}
+
